@@ -28,43 +28,43 @@ on:
   workflow_dispatch:
     inputs:
       source:
-        description: '选择要编译的源码'
+        description: "选择要编译的源码"
         required: true
-        default: 'immwrt'
+        default: "immwrt"
         type: choice
-        options: ['immwrt', 'lean']
+        options: ["immwrt"]
 
       target:
-        description: '选择要编译的机型'
+        description: "选择要编译的机型"
         required: true
-        default: 'x86-64'
+        default: "x86-64"
         type: choice
-        options: ['x86-64']
+        options: ["x86-64"]
 
       ip_address:
-        description: '设置默认IP地址'
+        description: "设置默认IP地址"
         required: false
-        default: '10.0.0.2'
+        default: "10.0.0.2"
 
       partsize:
-        description: '设置rootfs大小'
+        description: "设置rootfs大小"
         required: false
-        default: '800'
+        default: "1024"
 
       toolchain:
-        description: '使用toolchain缓存'
+        description: "使用toolchain缓存"
         required: false
         default: true
         type: boolean
 
       artifact:
-        description: '上传固件到Artifact'
+        description: "上传固件到Artifact"
         required: false
         default: true
         type: boolean
 
       release:
-        description: '上传固件到Releases'
+        description: "上传固件到Releases"
         required: false
         default: true
         type: boolean
@@ -155,7 +155,7 @@ jobs:
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           tag: toolchain-cache
-          assets: '${{env.SOURCE_REPO}}-${{env.LITE_BRANCH}}-${{env.DEVICE_TARGET}}*'
+          assets: "${{env.SOURCE_REPO}}-${{env.LITE_BRANCH}}-${{env.DEVICE_TARGET}}*"
           fail-if-no-assets: false
           fail-if-no-release: false
 
