@@ -202,9 +202,6 @@ main() {
     # 更新配置文件
     status_info "更新配置文件" update_config_file
 
-    # 下载openclash运行内核
-    status_info "下载openclash运行内核" preset_openclash_core
-
     # 显示编译信息
     show_build_info
 
@@ -407,34 +404,6 @@ apply_custom_settings() {
 update_config_file() {
     [ -e "$GITHUB_WORKSPACE/$CONFIG_FILE" ] && cp -f "$GITHUB_WORKSPACE/$CONFIG_FILE" .config
     make defconfig 1>/dev/null 2>&1
-}
-
-# 检测指令集架构
-detect_openwrt_arch() {
-    local config="${1:-.config}"
-    local arch_pkgs=$(grep '^CONFIG_TARGET_ARCH_PACKAGES=' "$config" | cut -d'"' -f2)
-    [ -n "$arch_pkgs" ] || return 1
-    case "$arch_pkgs" in
-        x86_64) echo "amd64" ;; i386*) echo "386" ;; aarch64*) echo "arm64" ;;
-        arm_cortex-a*) echo "armv7" ;; arm_arm1176*|arm_mpcore*) echo "armv6" ;;
-        arm_arm926*|arm_fa526|arm*xscale) echo "armv5" ;;
-        mips64el_*) echo "mips64le" ;; mips64_*) echo "mips64" ;;
-        mipsel_*) echo "mipsle" ;; mips_*) echo "mips" ;;
-        riscv64*) echo "riscv64" ;; loongarch64*) echo "loong64" ;;
-        powerpc64_*) echo "ppc64" ;; powerpc_*) echo "ppc" ;;
-        arc_*) echo "arc" ;; *) echo "unknown" ;;
-    esac
-}
-
-# 下载openclash运行内核
-preset_openclash_core() {
-    CPU_ARCH=$(detect_openwrt_arch ".config")
-    if [[ "$CPU_ARCH" =~ ^(amd64|arm64|armv7|armv6|armv5|386|mips64|mips64le|riscv64)$ ]] && grep -q "luci-app-openclash=y" .config; then
-        chmod +x $GITHUB_WORKSPACE/scripts/preset-clash-core.sh
-        $GITHUB_WORKSPACE/scripts/preset-clash-core.sh $CPU_ARCH
-    else
-        return 99
-    fi
 }
 
 show_build_info() {
