@@ -297,27 +297,15 @@ add_custom_packages() {
     destination_dir="package/A"
     [ -d "$destination_dir" ] || mkdir -p "$destination_dir"
 
-    # 基础插件
-    clone_dir openwrt-23.05 https://github.com/coolsnowwolf/luci luci-app-adguardhome
-    clone_dir https://github.com/sirpdboy/luci-app-ddns-go ddns-go luci-app-ddns-go
-    clone_all https://github.com/sbwml/luci-app-alist
-    clone_all https://github.com/sbwml/luci-app-mosdns
+    # 基础依赖
     git_clone https://github.com/sbwml/packages_lang_golang golang
-    clone_all https://github.com/linkease/istore-ui
-    clone_all https://github.com/linkease/istore luci
-    clone_all https://github.com/brvphoenix/luci-app-wrtbwmon
-    clone_all https://github.com/brvphoenix/wrtbwmon
 
     # 科学上网插件
     # clone_all https://github.com/fw876/helloworld
     clone_all https://github.com/Openwrt-Passwall/openwrt-passwall-packages
     clone_all https://github.com/Openwrt-Passwall/openwrt-passwall
-    clone_all https://github.com/Openwrt-Passwall/openwrt-passwall2
-    clone_dir https://github.com/vernesong/OpenClash luci-app-openclash
     clone_all https://github.com/nikkinikki-org/OpenWrt-nikki
     clone_all https://github.com/nikkinikki-org/OpenWrt-momo
-    clone_dir https://github.com/QiuSimons/luci-app-daed daed luci-app-daed
-    git_clone https://github.com/immortalwrt/homeproxy luci-app-homeproxy
 
     # Themes
     git_clone https://github.com/kiddin9/luci-theme-edge
@@ -413,7 +401,6 @@ show_build_info() {
     echo "🔷 源码分支: $(color cc "$REPO_BRANCH")"
     echo "🔷 目标设备: $(color cc "$DEVICE_TARGET")"
     echo "🔷 内核版本: $(color cc "$KERNEL_VERSION")"
-    echo "🔷 编译架构: $(color cc "$CPU_ARCH")"
     echo "========================================"
 }
 
