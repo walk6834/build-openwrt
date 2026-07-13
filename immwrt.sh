@@ -205,9 +205,6 @@ main() {
     # 下载openclash运行内核
     status_info "下载openclash运行内核" preset_openclash_core
 
-    # 下载zsh终端工具
-    status_info "下载zsh终端工具" preset_shell_tools
-
     # 显示编译信息
     show_build_info
 
@@ -370,9 +367,6 @@ apply_custom_settings() {
     # 修改默认ip地址
     [ "$IP_ADDRESS" ] && sed -i '/lan) ipad/s/".*"/"'"$IP_ADDRESS"'"/' package/base-files/files/bin/config_generate
 
-    # 更改默认shell为zsh
-    # sed -i 's/\/bin\/ash/\/usr\/bin\/zsh/g' package/base-files/files/etc/passwd
-
     # ttyd免登录
     sed -i 's|/bin/login|/bin/login -f root|g' feeds/packages/utils/ttyd/files/ttyd.config
 
@@ -438,16 +432,6 @@ preset_openclash_core() {
     if [[ "$CPU_ARCH" =~ ^(amd64|arm64|armv7|armv6|armv5|386|mips64|mips64le|riscv64)$ ]] && grep -q "luci-app-openclash=y" .config; then
         chmod +x $GITHUB_WORKSPACE/scripts/preset-clash-core.sh
         $GITHUB_WORKSPACE/scripts/preset-clash-core.sh $CPU_ARCH
-    else
-        return 99
-    fi
-}
-
-# 下载zsh终端工具
-preset_shell_tools() {
-    if grep -q "zsh=y" .config; then
-        chmod +x $GITHUB_WORKSPACE/scripts/preset-terminal-tools.sh
-        $GITHUB_WORKSPACE/scripts/preset-terminal-tools.sh
     else
         return 99
     fi
