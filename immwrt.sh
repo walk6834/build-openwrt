@@ -97,44 +97,6 @@ git_clone() {
     fi
 }
 
-# 添加源仓库内的指定目录
-clone_dir() {
-    local repo_url branch temp_dir=$(mktemp -d)
-    if [[ "$1" == */* ]]; then
-        repo_url="$1"
-        shift
-    else
-        branch="-b $1 --single-branch"
-        repo_url="$2"
-        shift 2
-    fi
-    git clone -q $branch --depth=1 "$repo_url" "$temp_dir" 2>/dev/null || {
-        print_info $(color cr 拉取) "$repo_url" [ $(color cr ✖) ]
-        rm -rf "$temp_dir"
-        return 1
-    }
-    local target_dir source_dir current_dir
-    for target_dir in "$@"; do
-        source_dir=$(find_dir "$temp_dir" "$target_dir")
-        [[ -d "$source_dir" ]] || \
-        source_dir=$(find "$temp_dir" -maxdepth 4 -type d -name "$target_dir" -print -quit) && \
-        [[ -d "$source_dir" ]] || {
-            print_info $(color cr 查找) "$target_dir" [ $(color cr ✖) ]
-            continue
-        }
-        current_dir=$(find_dir "package/ feeds/ target/" "$target_dir")
-        if [[ -d "$current_dir" ]]; then
-            rm -rf "$current_dir"
-            mv -f "$source_dir" "${current_dir%/*}"
-            print_info $(color cg 替换) "$target_dir" [ $(color cg ✔) ]
-        else
-            mv -f "$source_dir" "$destination_dir"
-            print_info $(color cb 添加) "$target_dir" [ $(color cb ✔) ]
-        fi
-    done
-    rm -rf "$temp_dir"
-}
-
 # 添加源仓库内的所有子目录
 clone_all() {
     local repo_url branch temp_dir=$(mktemp -d)
@@ -293,48 +255,15 @@ update_install_feeds() {
 add_custom_packages() {
     echo "📦 添加额外插件..."
 
-    # 创建插件保存目录
-    destination_dir="package/A"
-    [ -d "$destination_dir" ] || mkdir -p "$destination_dir"
-
-    # 基础依赖
-    git_clone https://github.com/sbwml/packages_lang_golang golang
-
     # 科学上网插件
-    # clone_all https://github.com/fw876/helloworld
     clone_all https://github.com/Openwrt-Passwall/openwrt-passwall-packages
     clone_all https://github.com/Openwrt-Passwall/openwrt-passwall
     clone_all https://github.com/nikkinikki-org/OpenWrt-nikki
     clone_all https://github.com/nikkinikki-org/OpenWrt-momo
 
     # Themes
-    git_clone https://github.com/kiddin9/luci-theme-edge
     git_clone https://github.com/jerrykuku/luci-theme-argon
     git_clone https://github.com/jerrykuku/luci-app-argon-config
-    git_clone https://github.com/eamonxg/luci-theme-aurora
-    git_clone https://github.com/eamonxg/luci-app-aurora-config
-    git_clone https://github.com/sirpdboy/luci-theme-kucat
-    git_clone https://github.com/sirpdboy/luci-app-kucat-config
-
-    # 晶晨宝盒
-    clone_all https://github.com/ophub/luci-app-amlogic
-    sed -i "s|firmware_repo.*|firmware_repo 'https://github.com/$GITHUB_REPOSITORY'|g" $destination_dir/luci-app-amlogic/root/etc/config/amlogic
-    # sed -i "s|kernel_path.*|kernel_path 'https://github.com/ophub/kernel'|g" $destination_dir/luci-app-amlogic/root/etc/config/amlogic
-    sed -i "s|ARMv8|$RELEASE_TAG|g" $destination_dir/luci-app-amlogic/root/etc/config/amlogic
-
-    # 修复Makefile路径
-    find "$destination_dir" -type f -name "Makefile" | xargs sed -i \
-        -e 's?\.\./\.\./\(lang\|devel\)?$(TOPDIR)/feeds/packages/\1?' \
-        -e 's?\.\./\.\./luci.mk?$(TOPDIR)/feeds/luci/luci.mk?'
-
-    # 转换插件语言翻译
-    for e in $(ls -d $destination_dir/luci-*/po feeds/luci/applications/luci-*/po); do
-        if [[ -d $e/zh-cn && ! -d $e/zh_Hans ]]; then
-            ln -s zh-cn $e/zh_Hans 2>/dev/null
-        elif [[ -d $e/zh_Hans && ! -d $e/zh-cn ]]; then
-            ln -s zh_Hans $e/zh-cn 2>/dev/null
-        fi
-    done
 }
 
 # 加载个人设置
@@ -360,32 +289,6 @@ apply_custom_settings() {
 
     # 更改argon主题背景
     cp -f $GITHUB_WORKSPACE/images/bg1.jpg feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/img/bg1.jpg
-
-    # 删除主题默认设置
-    # find $destination_dir/luci-theme-*/ -type f -name '*luci-theme-*' -exec sed -i '/set luci.main.mediaurlbase/d' {} +
-
-    # 设置nlbwmon独立菜单
-    sed -i 's/services\/nlbw/nlbw/g; /path/s/admin\///g' feeds/luci/applications/luci-app-nlbwmon/root/usr/share/luci/menu.d/luci-app-nlbwmon.json
-    sed -i 's/services\///g' feeds/luci/applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw/config.js
-
-    # 修改qca-nss-drv启动顺序
-    drv_path="feeds/nss_packages/qca-nss-drv/files/qca-nss-drv.init"
-    if [ -f "$drv_path" ]; then
-        sed -i 's/START=.*/START=85/g' "$drv_path"
-    fi
-
-    # 修改qca-nss-pbuf启动顺序
-    pbuf_path="package/kernel/mac80211/files/qca-nss-pbuf.init"
-    if [ -f "$pbuf_path" ]; then
-        sed -i 's/START=.*/START=86/g' "$pbuf_path"
-    fi
-
-    # 移除attendedsysupgrade
-    find "feeds/luci/collections" -name "Makefile" | while read -r makefile; do
-        if grep -q "luci-app-attendedsysupgrade" "$makefile"; then
-            sed -i "/luci-app-attendedsysupgrade/d" "$makefile"
-        fi
-    done
 }
 
 # 更新配置文件
