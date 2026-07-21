@@ -194,7 +194,8 @@ jobs:
           echo "==============================="
           cd $OPENWRT_PATH/bin/targets/*/* && ls
           echo "==============================="
-          sed '/^$/d' $OPENWRT_PATH/.config > config.txt
+          # sed '/^$/d' $OPENWRT_PATH/.config > config.txt
+          ./$OPENWRT_PATH/scripts/diffconfig.sh > config.txt
           cat config.buildinfo
           cp -rf $OPENWRT_PATH/bin/packages/* packages
           tar -zcf packages.tar.gz packages
