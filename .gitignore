@@ -1,0 +1,15 @@
+# idea
+.idea/
+.history/
+
+# claude
+.claude/settings.local.json
+
+# trae
+.trae/
+
+# 临时文件
+tmp/
+
+# 日志
+logs/
